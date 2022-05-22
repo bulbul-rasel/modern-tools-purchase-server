@@ -49,6 +49,7 @@ async function run() {
     try {
         await client.connect();
         const productCollection = client.db('modernTools').collection('products');
+        const bookingCollection = client.db('modernTools').collection('bookings');
 
         //AUTH
         app.post('/login', async (req, res) => {
@@ -71,6 +72,19 @@ async function run() {
             const result = await productCollection.insertOne(product);
             res.send({ success: true, message: `Successfully inserted ${product.name}` })
         })
+
+        app.post('/bookings', async (req, res) => {
+            const bookings = req.body;
+
+            if (!bookings.name || !bookings.email || !bookings.product || !bookings.phone || !bookings.price || !bookings.address) {
+                return res.send({ success: false, error: "Please Provide all Information" })
+            }
+
+            const result = await bookingCollection.insertOne(bookings);
+            res.send({ success: true, message: `Successfully inserted ${bookings.name}` })
+        })
+
+
 
         // Get
 
