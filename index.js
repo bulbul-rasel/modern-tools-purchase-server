@@ -64,7 +64,7 @@ async function run() {
         app.post('/products', async (req, res) => {
             const product = req.body;
 
-            if (!product.name || !product.email || !product.image || !product.description || !product.price || !product.quantity || !product.sname) {
+            if (!product.name || !product.email || !product.image || !product.description || !product.price || !product.quantity || !product.minimum) {
                 return res.send({ success: false, error: "Please Provide all Information" })
             }
 
@@ -106,6 +106,22 @@ async function run() {
             res.send(result);
 
         })
+
+        app.delete("/products/:id", validateId, async (req, res) => {
+            const id = req.id;
+
+
+            const result = await productCollection.deleteOne({ _id: ObjectId(id) })
+
+            console.log(result)
+
+            if (!result.deletedCount) {
+                return res.send({ success: false, error: "something went wrong" });
+            }
+
+            res.send({ success: true, message: "Successfully deleted " })
+
+        });
 
 
 
