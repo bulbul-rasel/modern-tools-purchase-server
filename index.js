@@ -15,17 +15,16 @@ app.use(express.json());
 function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-        return res.status(401).send({ message: 'Unauthorize Access' });
+        return res.status(401).send({ message: 'UnAuthorized access' });
     }
     const token = authHeader.split(' ')[1];
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
         if (err) {
-            return res.status(403).send({ message: 'Forbidden Access' })
+            return res.status(403).send({ message: 'Forbidden access' })
         }
-        console.log('decoded', decoded);
         req.decoded = decoded;
-    })
-    next();
+        next();
+    });
 }
 
 const validateId = (req, res, next) => {
@@ -130,10 +129,7 @@ async function run() {
 
         app.delete("/products/:id", validateId, async (req, res) => {
             const id = req.id;
-
-
             const result = await productCollection.deleteOne({ _id: ObjectId(id) })
-
             console.log(result)
 
             if (!result.deletedCount) {
@@ -146,10 +142,7 @@ async function run() {
 
         app.delete("/bookings/:id", validateId, async (req, res) => {
             const id = req.id;
-
-
             const result = await bookingCollection.deleteOne({ _id: ObjectId(id) })
-
             console.log(result)
 
             if (!result.deletedCount) {
@@ -173,6 +166,10 @@ async function run() {
             res.send({ result, token });
         })
 
+        app.get('/user', verifyJWT, async (req, res) => {
+            const users = await userCollection.find().toArray();
+            res.send(users);
+        })
 
 
     }
