@@ -74,11 +74,37 @@ async function run() {
 
         // Get
 
-        app.get('/task', async (req, res) => {
+        app.get('/products', async (req, res) => {
             const query = {};
-            const cursor = taskCollection.find(query);
+            const cursor = productCollection.find(query);
             const users = await cursor.toArray();
             res.send(users);
+        })
+
+        app.get('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const product = await productCollection.findOne(query);
+            res.send(product);
+        })
+
+        // update quantity
+        app.put('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedQuantity = req.body.updatedQuantity;
+            console.log(updatedQuantity);
+            const filter = { _id: ObjectId(id) };
+            console.log(filter);
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    quantity: updatedQuantity
+                }
+            };
+            const result = await productCollection.updateOne(filter, updatedDoc, options);
+            console.log(updatedDoc);
+            res.send(result);
+
         })
 
 
