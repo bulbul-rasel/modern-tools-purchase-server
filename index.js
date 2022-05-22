@@ -50,6 +50,7 @@ async function run() {
         await client.connect();
         const productCollection = client.db('modernTools').collection('products');
         const bookingCollection = client.db('modernTools').collection('bookings');
+        const userCollection = client.db("modernTools").collection("users");
 
         //AUTH
         app.post('/login', async (req, res) => {
@@ -91,6 +92,12 @@ async function run() {
         app.get('/products', async (req, res) => {
             const query = {};
             const cursor = productCollection.find(query);
+            const users = await cursor.toArray();
+            res.send(users);
+        })
+        app.get('/bookings', async (req, res) => {
+            const query = {};
+            const cursor = bookingCollection.find(query);
             const users = await cursor.toArray();
             res.send(users);
         })
@@ -136,6 +143,35 @@ async function run() {
             res.send({ success: true, message: "Successfully deleted " })
 
         });
+
+        app.delete("/bookings/:id", validateId, async (req, res) => {
+            const id = req.id;
+
+
+            const result = await bookingCollection.deleteOne({ _id: ObjectId(id) })
+
+            console.log(result)
+
+            if (!result.deletedCount) {
+                return res.send({ success: false, error: "something went wrong" });
+            }
+
+            res.send({ success: true, message: "Successfully deleted " })
+
+        });
+
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
+            res.send({ result, token });
+        })
 
 
 
