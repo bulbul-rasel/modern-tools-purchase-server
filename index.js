@@ -50,6 +50,7 @@ async function run() {
         const productCollection = client.db('modernTools').collection('products');
         const bookingCollection = client.db('modernTools').collection('bookings');
         const userCollection = client.db("modernTools").collection("users");
+        const ratingCollection = client.db("modernTools").collection("ratings");
 
         const verifyAdmin = async (req, res, next) => {
             const requester = req.decoded.email;
@@ -122,13 +123,15 @@ async function run() {
         app.put('/product/:id', async (req, res) => {
             const id = req.params.id;
             const updatedQuantity = req.body.updatedQuantity;
-            console.log(updatedQuantity);
+            const price = req.body.price;
+            // console.log(updatedQuantity);
             const filter = { _id: ObjectId(id) };
             console.log(filter);
             const options = { upsert: true };
             const updatedDoc = {
                 $set: {
-                    quantity: updatedQuantity
+                    quantity: updatedQuantity,
+                    price: price
                 }
             };
             const result = await productCollection.updateOne(filter, updatedDoc, options);
@@ -211,6 +214,18 @@ async function run() {
             } else {
                 res.status(403).send({ message: 'Forbidden Access' })
             }
+        })
+
+        app.post('/ratings', async (req, res) => {
+            const rating = req.body;
+            const result = await ratingCollection.insertOne(rating);
+            res.send(result);
+        });
+        app.get('/ratings', async (req, res) => {
+            const query = {};
+            const cursor = ratingCollection.find(query);
+            const ratings = await cursor.toArray();
+            res.send(ratings);
         })
 
 
