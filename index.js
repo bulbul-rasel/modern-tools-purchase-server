@@ -252,6 +252,20 @@ async function run() {
             res.send(profile);
         })
 
+        app.get('/myProfile', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const email = req.query.email;
+            if (email === decodedEmail) {
+                const query = { email: email };
+                const profile = profileCollection.find(query);
+                const myProfile = await profile.toArray();
+                res.send(myProfile);
+            } else {
+                res.status(403).send({ message: 'Forbidden Access' })
+            }
+        })
+
+
     }
     catch (error) {
         console.log(error);
