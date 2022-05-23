@@ -227,6 +227,18 @@ async function run() {
             const ratings = await cursor.toArray();
             res.send(ratings);
         })
+        app.get('/myReview', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const email = req.query.email;
+            if (email === decodedEmail) {
+                const query = { email: email };
+                const cursor = ratingCollection.find(query);
+                const myRating = await cursor.toArray();
+                res.send(myRating);
+            } else {
+                res.status(403).send({ message: 'Forbidden Access' })
+            }
+        })
 
 
     }
