@@ -51,6 +51,7 @@ async function run() {
         const bookingCollection = client.db('modernTools').collection('bookings');
         const userCollection = client.db("modernTools").collection("users");
         const ratingCollection = client.db("modernTools").collection("ratings");
+        const profileCollection = client.db("modernTools").collection("profile");
 
         const verifyAdmin = async (req, res, next) => {
             const requester = req.decoded.email;
@@ -239,7 +240,17 @@ async function run() {
                 res.status(403).send({ message: 'Forbidden Access' })
             }
         })
-
+        app.post('/profile', async (req, res) => {
+            const profile = req.body;
+            const result = await profileCollection.insertOne(profile);
+            res.send(result);
+        });
+        app.get('/profile', async (req, res) => {
+            const query = {};
+            const cursor = profileCollection.find(query);
+            const profile = await cursor.toArray();
+            res.send(profile);
+        })
 
     }
     catch (error) {
