@@ -198,6 +198,19 @@ async function run() {
             const result = await userCollection.updateOne(filter, updateDoc);
             res.send(result);
 
+        });
+
+        app.get('/myitem', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const email = req.query.email;
+            if (email === decodedEmail) {
+                const query = { email: email };
+                const cursor = bookingCollection.find(query);
+                const myItem = await cursor.toArray();
+                res.send(myItem);
+            } else {
+                res.status(403).send({ message: 'Forbidden Access' })
+            }
         })
 
 
