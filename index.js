@@ -7,6 +7,8 @@ const port = process.env.PORT || 5000;
 // const port = process.env.PORT;
 const app = express();
 
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
+
 //middleware
 app.use(cors());
 app.use(express.json());
@@ -52,6 +54,8 @@ async function run() {
         const userCollection = client.db("modernTools").collection("users");
         const ratingCollection = client.db("modernTools").collection("ratings");
         const profileCollection = client.db("modernTools").collection("profile");
+        const paymentCollection = client.db("modernTools").collection("payments");
+
 
         const verifyAdmin = async (req, res, next) => {
             const requester = req.decoded.email;
@@ -72,6 +76,37 @@ async function run() {
             res.send({ accessToken })
         })
 
+        app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+            const service = req.body;
+            const price = service.price;
+            const amount = price * 100;
+
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        })
+
+
+        app.patch('/booking/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+
+            const result = await paymentCollection.insertOne(payment);
+            const updatedBooking = await bookingCollection.updateOne(filter, updatedDoc);
+            res.send(updatedBooking);
+        })
 
         // POST
         app.post('/products', async (req, res) => {
@@ -263,6 +298,13 @@ async function run() {
             } else {
                 res.status(403).send({ message: 'Forbidden Access' })
             }
+        })
+
+        app.get('/booking/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const booking = await bookingCollection.findOne(query);
+            res.send(booking);
         })
 
 
