@@ -308,6 +308,29 @@ async function run() {
         })
 
 
+        // ------------------------------------
+        app.post('/bookings', async (req, res) => {
+            const order = req.body;
+            const result = await bookingCollection.insertOne(order);
+            res.send(result);
+        })
+        //get orders from a user ...
+        app.get('/booking', verifyJWT, async (req, res) => {
+            const customer = req.query.customer;
+            const decodedEmail = req.decoded.email;
+            if (customer === decodedEmail) {
+
+                const query = { customer: customer };
+                const orders = await bookingCollection.find(query).toArray();
+                return res.send(orders);
+            }
+            else {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
+        })
+
+
     }
     catch (error) {
         console.log(error);
