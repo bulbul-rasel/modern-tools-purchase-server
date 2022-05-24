@@ -239,6 +239,19 @@ async function run() {
 
         });
 
+        app.delete("/users/:id", validateId, async (req, res) => {
+            const id = req.id;
+            const result = await userCollection.deleteOne({ _id: ObjectId(id) })
+            console.log(result)
+
+            if (!result.deletedCount) {
+                return res.send({ success: false, error: "something went wrong" });
+            }
+
+            res.send({ success: true, message: "Successfully deleted " })
+
+        });
+
         app.get('/myitem', verifyJWT, async (req, res) => {
             const decodedEmail = req.decoded.email;
             const email = req.query.email;
