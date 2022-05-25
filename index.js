@@ -288,30 +288,28 @@ async function run() {
                 res.status(403).send({ message: 'Forbidden Access' })
             }
         })
-        app.post('/profile', async (req, res) => {
-            const profile = req.body;
-            const result = await profileCollection.insertOne(profile);
-            res.send(result);
-        });
-        app.get('/profile', async (req, res) => {
-            const query = {};
-            const cursor = profileCollection.find(query);
-            const profile = await cursor.toArray();
-            res.send(profile);
+
+        app.put('/profile/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email
+            const user = req.body
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user
+            };
+            const result = await profileCollection.updateOne(filter, updateDoc, options);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
+            res.send({ result, token });
+        })
+        //user info api get
+        app.get("/profileInfo", async (req, res) => {
+            const email = req.query.email
+            const query = { email: email }
+            const info = await profileCollection.findOne(query)
+            res.send(info)
         })
 
-        app.get('/myProfile', verifyJWT, async (req, res) => {
-            const decodedEmail = req.decoded.email;
-            const email = req.query.email;
-            if (email === decodedEmail) {
-                const query = { email: email };
-                const profile = profileCollection.find(query);
-                const myProfile = await profile.toArray();
-                res.send(myProfile);
-            } else {
-                res.status(403).send({ message: 'Forbidden Access' })
-            }
-        })
+
 
         app.get('/booking/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
@@ -321,13 +319,12 @@ async function run() {
         })
 
 
-        // ------------------------------------
         app.post('/bookings', async (req, res) => {
             const order = req.body;
             const result = await bookingCollection.insertOne(order);
             res.send(result);
         })
-        //get orders from a user ...
+
         app.get('/booking', verifyJWT, async (req, res) => {
             const customer = req.query.customer;
             const decodedEmail = req.decoded.email;
